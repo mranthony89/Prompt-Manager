@@ -443,9 +443,50 @@ source venv/bin/activate</code></pre>
                 <div class="step-number">4</div>
                 <div class="step-content">
                     <h3>Installa le dipendenze</h3>
-                    <pre><code>pip install -r requirements.txt</code></pre>
-                    <div class="tip">
-                        <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Questo passaggio potrebbe richiedere diversi minuti, specialmente su connessioni lente o PC meno potenti.
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="openTab(event, 'requirements')">Con requirements.txt</div>
+                        <div class="tab" onclick="openTab(event, 'manual-deps')">Installazione manuale</div>
+                    </div>
+                    
+                    <div id="requirements" class="tab-content active">
+                        <pre><code>pip install -r requirements.txt</code></pre>
+                        <div class="tip">
+                            <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Questo passaggio potrebbe richiedere diversi minuti, specialmente su connessioni lente o PC meno potenti.
+                        </div>
+                    </div>
+                    
+                    <div id="manual-deps" class="tab-content">
+                        <p>Installa individualmente ogni pacchetto necessario:</p>
+                        <pre><code># Interfaccia web
+pip install gradio>=3.50.0
+
+# API Requests
+pip install requests>=2.31.0
+
+# Gestione degli errori e dei ritentativi
+pip install tenacity>=8.2.0
+
+# Variabili d'ambiente e configurazioni
+pip install python-dotenv>=1.0.0
+pip install pydantic>=2.0.0
+
+# Analisi linguistica
+pip install spacy>=3.7.0
+
+# Typing avanzato
+pip install typing-extensions>=4.5.0
+
+# Gestione cache
+pip install cachetools>=5.3.0
+
+# Altri requisiti
+pip install numpy>=1.24.0
+pip install pandas>=2.0.0
+pip install matplotlib>=3.7.0</code></pre>
+                        <div class="tip">
+                            <i class="fas fa-lightbulb"></i> <strong>Suggerimento:</strong> L'installazione manuale può essere utile se incontri problemi con specifici pacchetti o desideri personalizzare le versioni.
+                        </div>
                     </div>
                 </div>
             </div>
