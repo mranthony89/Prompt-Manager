@@ -1,4 +1,71 @@
-    def genera_punteggio_qualita(self, prompt_originale, prompt_migliorato):
+    @retry(
+        stop=stop_after_attempt(settings.max_retry_attempts), 
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type(requests.exceptions.RequestException)
+    )
+    def _chiama_api_deepseek(self, system_prompt: str, user_message: str, 
+                             model: str = None, temperatura: float = None) -> Dict[str, Any]:
+        """
+        Chiama l'API DeepSeek con gestione degli errori migliorata.
+        
+        Args:
+            system_prompt (str): Il prompt di sistema.
+            user_message (str): Il messaggio dell'utente.
+            model (str, optional): Il modello da utilizzare. Default: settings.deepseek_model.
+            temperatura (float, optional): La temperatura per la generazione. Default: settings.deepseek_temperature.
+            
+        Returns:
+            dict: La risposta dell'API.
+            
+        Raises:
+            requests.exceptions.RequestException: Se la richiesta all'API fallisce dopo i tentativi.
+        """
+        # Usa i valori predefiniti dalle impostazioni se non specificati
+        model = model or settings.deepseek_model
+        temperatura = temperatura or settings.deepseek_temperature
+        
+        url = settings.deepseek_api_url
+        
+        headers = {
+            "Authorization": f"Bearer {settings.deepseek_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            "temperature": temperatura,
+            "max_tokens": settings.deepseek_max_tokens
+        }
+        
+        self.logger.info(f"Invio richiesta a DeepSeek API. Model: {model}, Content length: {len(user_message)}")
+        
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=settings.api_timeout)
+            response.raise_for_status()
+            self.logger.info("Risposta ricevuta correttamente dall'API")
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                self.logger.warning("Rate limit raggiunto. Attesa prima di riprovare...")
+            elif e.response.status_code == 401:
+                self.logger.error("Errore di autenticazione API. Verifica la chiave API.")
+                # Non ritentiamo per errori di autenticazione
+                raise
+            self.logger.error(f"HTTP error: {str(e)}")
+            raise
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"Errore di connessione: {str(e)}")
+            raise
+        except requests.exceptions.Timeout as e:
+            self.logger.error(f"Timeout della richiesta: {str(e)}")
+            raise
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Errore API: {str(e)}")
+            raise    def genera_punteggio_qualita(self, prompt_originale, prompt_migliorato):
         """
         Calcola un punteggio di qualità per il prompt migliorato rispetto all'originale.
         
@@ -151,6 +218,40 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from logging.handlers import RotatingFileHandler
 import html
 from typing import Dict, List, Any, Optional, Union
+from pydantic import BaseSettings, Field
+from cachetools import TTLCache
+
+# Classe di configurazione centralizzata
+class Settings(BaseSettings):
+    """
+    Configurazione centralizzata per l'applicazione Prompt Perfezionatore.
+    Utilizza Pydantic per la validazione e caricamento delle variabili d'ambiente.
+    """
+    # Configurazioni API
+    deepseek_api_key: str = Field("", env="DEEPSEEK_API_KEY")
+    deepseek_api_url: str = "https://api.deepseek.com/v1/chat/completions"
+    language_tool_url: str = "https://languagetool.org/api/v2/check"
+    
+    # Limiti e timeout
+    max_input_length: int = 10000
+    api_timeout: int = 30
+    max_retry_attempts: int = 3
+    
+    # Configurazioni cache
+    cache_size: int = 100
+    cache_ttl: int = 3600  # 1 ora in secondi
+    
+    # Parametri API
+    deepseek_model: str = "deepseek-chat"
+    deepseek_temperature: float = 0.7
+    deepseek_max_tokens: int = 2000
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+# Istanza delle configurazioni
+settings = Settings()
 
 # Configurazione del logging
 def setup_logging():
@@ -170,11 +271,6 @@ logger = setup_logging()
 # Caricamento delle variabili d'ambiente
 load_dotenv()
 
-# Configurazione DeepSeek API
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-if not DEEPSEEK_API_KEY:
-    logger.warning("Chiave API di DeepSeek non trovata. Imposta la variabile d'ambiente DEEPSEEK_API_KEY.")
-
 # Caricamento del modello spaCy per l'analisi linguistica
 try:
     nlp = spacy.load("it_core_news_sm")
@@ -190,11 +286,30 @@ class GrammarChecker:
     
     def __init__(self):
         """Inizializza il verificatore grammaticale."""
-        self.api_url = "https://languagetool.org/api/v2/check"
+        self.api_url = settings.language_tool_url
         self.logger = logging.getLogger(__name__)
         self.ultimo_controllo = None
         self.ultima_risposta = None
         self.servizio_disponibile = True
+    
+    def _handle_api_error(self, error_type: str, message: str) -> Dict[str, Any]:
+        """
+        Gestisce errori API in modo centralizzato.
+        
+        Args:
+            error_type (str): Tipo di errore (timeout, connection, etc.)
+            message (str): Messaggio di errore da registrare e restituire.
+            
+        Returns:
+            dict: Dizionario con informazioni sull'errore.
+        """
+        self.logger.error(f"Errore {error_type} in LanguageTool API: {message}")
+        self.servizio_disponibile = False
+        return {
+            "errori": [],
+            "servizio_disponibile": False,
+            "messaggio": message
+        }
         
     def verifica_testo(self, testo: str, lingua: str = "it") -> Dict[str, Any]:
         """
@@ -209,15 +324,11 @@ class GrammarChecker:
         """
         # Se il servizio è stato contrassegnato come non disponibile, evita la chiamata API
         if not self.servizio_disponibile:
-            self.logger.warning("Servizio LanguageTool non disponibile, verifica saltata")
-            return {
-                "errori": [],
-                "servizio_disponibile": False,
-                "messaggio": "Servizio LanguageTool non disponibile. Riprova più tardi."
-            }
+            return self._handle_api_error("unavailable", 
+                                        "Servizio LanguageTool non disponibile, verifica saltata")
             
         # Limita la lunghezza del testo per evitare problemi con l'API
-        testo = testo[:5000] if len(testo) > 5000 else testo
+        testo = testo[:settings.max_input_length] if len(testo) > settings.max_input_length else testo
         
         # Parametri per la richiesta
         params = {
@@ -230,7 +341,7 @@ class GrammarChecker:
             self.logger.info(f"Invio richiesta a LanguageTool API. Lunghezza testo: {len(testo)}")
             
             # Invio della richiesta con timeout
-            response = requests.post(self.api_url, data=params, timeout=10)
+            response = requests.post(self.api_url, data=params, timeout=settings.api_timeout)
             
             # Controllo risposta
             if response.status_code == 200:
@@ -270,39 +381,17 @@ class GrammarChecker:
                     "servizio_disponibile": True
                 }
             else:
-                self.logger.error(f"Errore nella risposta LanguageTool API: {response.status_code}")
-                self.servizio_disponibile = False
-                return {
-                    "errori": [],
-                    "servizio_disponibile": False,
-                    "messaggio": f"Errore API LanguageTool: {response.status_code}"
-                }
+                return self._handle_api_error("http", 
+                                           f"Errore nella risposta LanguageTool API: {response.status_code}")
                 
         except requests.exceptions.Timeout:
-            self.logger.error("Timeout nella richiesta a LanguageTool API")
-            self.servizio_disponibile = False
-            return {
-                "errori": [],
-                "servizio_disponibile": False,
-                "messaggio": "Timeout nella richiesta a LanguageTool API"
-            }
+            return self._handle_api_error("timeout", "Timeout nella richiesta a LanguageTool API")
             
         except requests.exceptions.ConnectionError:
-            self.logger.error("Errore di connessione a LanguageTool API")
-            self.servizio_disponibile = False
-            return {
-                "errori": [],
-                "servizio_disponibile": False,
-                "messaggio": "Impossibile connettersi a LanguageTool API"
-            }
+            return self._handle_api_error("connection", "Errore di connessione a LanguageTool API")
             
         except Exception as e:
-            self.logger.error(f"Errore durante la verifica grammaticale: {str(e)}")
-            return {
-                "errori": [],
-                "servizio_disponibile": False,
-                "messaggio": f"Errore durante l'analisi: {str(e)}"
-            }
+            return self._handle_api_error("unexpected", f"Errore durante la verifica grammaticale: {str(e)}")
     
     def is_servizio_disponibile(self) -> bool:
         """
@@ -383,11 +472,12 @@ class PromptPerfezionatore:
         self.ultimo_prompt_originale = None
         self.ultimo_prompt_migliorato = None
         self.ultimi_suggerimenti = None
-        self.cache = {}
+        # Utilizzo di TTLCache invece di dict standard
+        self.cache = TTLCache(maxsize=settings.cache_size, ttl=settings.cache_ttl)
         self.logger = logging.getLogger(__name__)
         self.grammar_checker = GrammarChecker()
         
-    def _get_cache_key(self, prompt):
+    def _get_cache_key(self, prompt: str) -> str:
         """
         Genera una chiave di cache basata sul prompt.
         
@@ -465,7 +555,7 @@ class PromptPerfezionatore:
             self.logger.error(f"Errore durante l'analisi del prompt: {str(e)}")
             return {"errore": f"Errore durante l'analisi: {str(e)}"}
     
-    def _sanitizza_input(self, testo):
+    def _sanitizza_input(self, testo: str) -> str:
         """
         Sanitizza l'input utente per prevenire problemi di sicurezza.
         
@@ -479,8 +569,9 @@ class PromptPerfezionatore:
             return ""
         
         # Limita la lunghezza massima
-        if len(testo) > 10000:
-            testo = testo[:10000]
+        if len(testo) > settings.max_input_length:
+            testo = testo[:settings.max_input_length]
+            self.logger.warning(f"Input troncato a {settings.max_input_length} caratteri")
             
         # Sanitizza HTML
         testo = html.escape(testo)
@@ -592,7 +683,7 @@ class PromptPerfezionatore:
             "ha_formattazione": ha_formattazione
         }
         
-    def migliora_prompt(self, prompt):
+    def migliora_prompt(self, prompt: str) -> tuple:
         """
         Utilizza DeepSeek per migliorare il prompt.
         
@@ -614,7 +705,7 @@ class PromptPerfezionatore:
             cached_result = self.cache[cache_key]
             return cached_result
         
-        if not DEEPSEEK_API_KEY:
+        if not settings.deepseek_api_key:
             self.logger.error("Chiave API di DeepSeek mancante")
             return (
                 "Impossibile migliorare il prompt: chiave API di DeepSeek mancante.",
@@ -1074,29 +1165,29 @@ def crea_interfaccia():
 
 def main():
     """Funzione principale."""
-    print("Avvio di Prompt Perfezionatore...")
+    logger.info("Avvio di Prompt Perfezionatore...")
     
     # Verifica delle dipendenze
     try:
         import gradio
-        print("Gradio trovato.")
+        logger.info("Gradio trovato.")
     except ImportError:
-        print("Gradio non trovato. Installalo con 'pip install gradio'.")
+        logger.error("Gradio non trovato. Installalo con 'pip install gradio'.")
         return
         
     try:
         import requests
-        print("Requests trovato.")
+        logger.info("Requests trovato.")
     except ImportError:
-        print("Requests non trovato. Installalo con 'pip install requests'.")
+        logger.error("Requests non trovato. Installalo con 'pip install requests'.")
         return
     
     # Controllo della chiave API
-    if not os.getenv("DEEPSEEK_API_KEY"):
-        print("\nATTENZIONE: Chiave API di DeepSeek non trovata.")
-        print("Crea un file .env nella stessa cartella di questo script e aggiungi la tua chiave API:")
-        print('DEEPSEEK_API_KEY="la-tua-chiave-api-qui"')
-        print("\nPuoi comunque avviare l'applicazione, ma non potrai migliorare i prompt.\n")
+    if not settings.deepseek_api_key:
+        logger.warning("\nATTENZIONE: Chiave API di DeepSeek non trovata.")
+        logger.warning("Crea un file .env nella stessa cartella di questo script e aggiungi la tua chiave API:")
+        logger.warning('DEEPSEEK_API_KEY="la-tua-chiave-api-qui"')
+        logger.warning("\nPuoi comunque avviare l'applicazione, ma non potrai migliorare i prompt.\n")
     
     # Creazione e avvio dell'interfaccia
     interfaccia = crea_interfaccia()

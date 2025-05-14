@@ -9,8 +9,9 @@ requests>=2.31.0
 # Gestione degli errori e dei ritentativi
 tenacity>=8.2.0
 
-# Variabili d'ambiente
+# Variabili d'ambiente e configurazioni
 python-dotenv>=1.0.0
+pydantic>=2.0.0
 
 # Analisi linguistica
 spacy>=3.7.0
@@ -18,8 +19,10 @@ spacy>=3.7.0
 # Typing avanzato
 typing-extensions>=4.5.0
 
+# Gestione cache
+cachetools>=5.3.0
+
 # Altri requisiti
 numpy>=1.24.0
 pandas>=2.0.0
 matplotlib>=3.7.0
-
