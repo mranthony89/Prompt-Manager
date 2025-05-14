@@ -588,16 +588,111 @@ pip install matplotlib>=3.7.0</code></pre>
                 <div class="step-number">2</div>
                 <div class="step-content">
                     <h3>Deploy su Hugging Face Spaces (consigliato per tester)</h3>
+                    <p>Ecco una guida passo-passo completa:</p>
+                    
                     <ol>
-                        <li>Crea un account su <a href="https://huggingface.co/" target="_blank">Hugging Face</a></li>
-                        <li>Vai su <a href="https://huggingface.co/spaces" target="_blank">Hugging Face Spaces</a></li>
+                        <li>Crea un account su <a href="https://huggingface.co/" target="_blank">Hugging Face</a> se non l'hai già fatto</li>
+                        <li>Vai su <a href="https://huggingface.co/spaces" target="_blank">Hugging Face Spaces</a> e clicca su "Create new Space"</li>
+                        <li>Inserisci i dettagli del tuo Space:
+                            <ul>
+                                <li>Owner: il tuo username</li>
+                                <li>Space name: ad esempio "prompt-perfezionatore" (verrà usato nell'URL)</li>
+                                <li>License: scegli "Apache 2.0" o "MIT"</li>
+                                <li>SDK: seleziona "Gradio"</li>
+                                <li>Space hardware: "CPU basic" (gratuito) è sufficiente</li>
+                                <li>Visibility: "Public" se vuoi che sia accessibile a tutti</li>
+                            </ul>
+                        </li>
                         <li>Clicca su "Create Space"</li>
-                        <li>Seleziona "Gradio" come SDK</li>
-                        <li>Carica i file del progetto (puoi farlo tramite interfaccia web o Git)</li>
-                        <li>Assicurati di configurare la variabile d'ambiente <code>DEEPSEEK_API_KEY</code> nelle impostazioni dello Space</li>
+                        <li>Ora vedrai una pagina con le istruzioni per caricare i file. Ci sono due opzioni per caricare i file:</li>
                     </ol>
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="openTab(event, 'hf-web')">Caricamento via Web</div>
+                        <div class="tab" onclick="openTab(event, 'hf-git')">Caricamento via Git</div>
+                    </div>
+                    
+                    <div id="hf-web" class="tab-content active">
+                        <ol>
+                            <li>Nel tuo Space, clicca sul pulsante "Files" nella barra laterale</li>
+                            <li>Clicca sul pulsante "Add file" in alto a destra e seleziona "Upload files"</li>
+                            <li>Seleziona e carica questi file dal tuo computer:
+                                <ul>
+                                    <li><code>prompt_perfezionatore.py</code> (il file principale)</li>
+                                    <li><code>requirements.txt</code></li>
+                                </ul>
+                            </li>
+                            <li>Dopo aver caricato i file, devi creare un file speciale chiamato <code>app.py</code> che è richiesto da Hugging Face:
+                                <ul>
+                                    <li>Clicca su "Add file" e seleziona "Create file"</li>
+                                    <li>Nomina il file <code>app.py</code></li>
+                                    <li>Incolla questo contenuto:
+                                        <pre><code>from prompt_perfezionatore import crea_interfaccia
+
+# Crea l'interfaccia di Gradio
+interfaccia = crea_interfaccia()
+
+# Esporta l'interfaccia come variabile 'app' per Hugging Face
+app = interfaccia</code></pre>
+                                    </li>
+                                    <li>Clicca su "Commit" per salvare il file</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <div id="hf-git" class="tab-content">
+                        <ol>
+                            <li>Installa Git sul tuo computer se non l'hai già fatto</li>
+                            <li>Copia il comando Git che vedi sulla pagina del tuo Space (sarà simile a:)
+                                <pre><code>git clone https://huggingface.co/spaces/tuousername/prompt-perfezionatore</code></pre>
+                            </li>
+                            <li>Apri un terminale e incolla il comando per clonare il repository</li>
+                            <li>Entra nella directory con <code>cd prompt-perfezionatore</code></li>
+                            <li>Copia i tuoi file nella directory:
+                                <ul>
+                                    <li><code>prompt_perfezionatore.py</code></li>
+                                    <li><code>requirements.txt</code></li>
+                                </ul>
+                            </li>
+                            <li>Crea un nuovo file <code>app.py</code> con il contenuto:
+                                <pre><code>from prompt_perfezionatore import crea_interfaccia
+
+# Crea l'interfaccia di Gradio
+interfaccia = crea_interfaccia()
+
+# Esporta l'interfaccia come variabile 'app' per Hugging Face
+app = interfaccia</code></pre>
+                            </li>
+                            <li>Esegui questi comandi Git per inviare i file:
+                                <pre><code>git add .
+git commit -m "Caricamento files Prompt Perfezionatore"
+git push</code></pre>
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <h4>Configurare la variabile d'ambiente DEEPSEEK_API_KEY</h4>
+                    <ol>
+                        <li>Nel tuo Space, clicca sul pulsante "Settings" nella barra laterale</li>
+                        <li>Trova la sezione "Repository secrets"</li>
+                        <li>Clicca su "New secret"</li>
+                        <li>Inserisci:
+                            <ul>
+                                <li>Secret name: <code>DEEPSEEK_API_KEY</code> (esattamente così, rispettando maiuscole/minuscole)</li>
+                                <li>Secret value: la tua chiave API di DeepSeek</li>
+                            </ul>
+                        </li>
+                        <li>Clicca su "Add secret" per salvare</li>
+                        <li>Torna alla scheda "App" per vedere l'applicazione in esecuzione (potrebbe richiedere qualche minuto per l'avvio)</li>
+                    </ol>
+                    
+                    <div class="success">
+                        <i class="fas fa-check-circle"></i> <strong>Pronto!</strong> Il tuo Prompt Perfezionatore è ora online all'indirizzo <code>https://huggingface.co/spaces/tuousername/prompt-perfezionatore</code>
+                    </div>
+                    
                     <div class="tip">
-                        <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Questa opzione è stabile, professionale e ideale per condividere con più tester.
+                        <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Hugging Face mostrerà l'URL del tuo Space nella parte superiore della pagina. Puoi condividerlo con i tuoi tester.
                     </div>
                 </div>
             </div>
