@@ -171,13 +171,13 @@ def analisi_grammatica_spacy(testo, nlp):
         "servizio_disponibile": True
     }
 
-def verifica_ortografia(testo, lingua="it"):
+def verifica_ortografia(testo, lingua="it_IT"):
     """
     Verifica l'ortografia utilizzando PySpellChecker.
     
     Args:
         testo (str): Il testo da verificare.
-        lingua (str): La lingua del testo.
+        lingua (str): Il codice della lingua. Default: "it_IT".
         
     Returns:
         dict: Risultati della verifica ortografica.
@@ -191,56 +191,75 @@ def verifica_ortografia(testo, lingua="it"):
             "servizio_disponibile": False
         }
     
-    # Inizializza SpellChecker con la lingua italiana
-    spell = SpellChecker(language=lingua)
-    
-    # Tokenizza il testo in parole
-    parole = testo.split()
-    
-    # Trova parole non corrette
-    parole_errate = spell.unknown(parole)
-    
-    errori = []
-    for parola in parole_errate:
-        correzione = spell.correction(parola)
-        alternative = spell.candidates(parola)
+    try:
+        # Inizializza SpellChecker con la lingua italiana
+        spell = SpellChecker(language=lingua)
         
-        # Indice della parola nel testo originale
-        try:
-            indice = testo.index(parola)
-        except ValueError:
-            indice = 0
+        # Tokenizza il testo in parole
+        parole = testo.split()
         
-        errori.append({
-            "tipo": "Ortografia",
-            "parola": parola,
-            "messaggio": f"'{parola}' potrebbe essere scritto in modo errato.",
-            "correzione": correzione,
-            "alternative": list(alternative),
-            "offset": indice,
-            "lunghezza": len(parola)
-        })
-    
-    # Calcola un punteggio (100 - percentuale di errori)
-    if parole:
-        punteggio = 100 - (len(parole_errate) / len(parole) * 100)
-    else:
-        punteggio = 100
-    
-    # Genera suggerimenti
-    suggerimenti = []
-    if errori:
-        suggerimenti.append(f"Il testo contiene {len(errori)} errori ortografici.")
-        for errore in errori[:3]:  # Limita a 3 suggerimenti
-            suggerimenti.append(f"'{errore['parola']}' potrebbe essere corretto come '{errore['correzione']}'.")
-    
-    return {
-        "errori": errori,
-        "conteggio_errori": len(errori),
-        "punteggio": max(0, min(100, punteggio)),
-        "suggerimenti": suggerimenti,
-        "servizio_disponibile": True
-    }
+        # Trova parole non corrette
+        parole_errate = spell.unknown(parole)
+        
+        errori = []
+        for parola in parole_errate:
+            correzione = spell.correction(parola)
+            alternative = spell.candidates(parola)
+            
+            # Indice della parola nel testo originale
+            try:
+                indice = testo.index(parola)
+            except ValueError:
+                indice = 0
+            
+            errori.append({
+                "tipo": "Ortografia",
+                "parola": parola,
+                "messaggio": f"'{parola}' potrebbe essere scritto in modo errato.",
+                "correzione": correzione,
+                "alternative": list(alternative),
+                "offset": indice,
+                "lunghezza": len(parola)
+            })
+        
+        # Calcola un punteggio (100 - percentuale di errori)
+        if parole:
+            punteggio = 100 - (len(parole_errate) / len(parole) * 100)
+        else:
+            punteggio = 100
+        
+        # Genera suggerimenti
+        suggerimenti = []
+        if errori:
+            suggerimenti.append(f"Il testo contiene {len(errori)} errori ortografici.")
+            for errore in errori[:3]:  # Limita a 3 suggerimenti
+                suggerimenti.append(f"'{errore['parola']}' potrebbe essere corretto come '{errore['correzione']}'.")
+        
+        return {
+            "errori": errori,
+            "conteggio_errori": len(errori),
+            "punteggio": max(0, min(100, punteggio)),
+            "suggerimenti": suggerimenti,
+            "servizio_disponibile": True
+        }
+    except ValueError as e:
+        # Gestisce l'errore se il dizionario della lingua non è disponibile
+        return {
+            "errori": [],
+            "conteggio_errori": 0,
+            "punteggio": 100,
+            "suggerimenti": [f"Dizionario per la lingua '{lingua}' non disponibile. Prova con 'en'."],
+            "servizio_disponibile": False
+        }
+    except Exception as e:
+        # Gestisce altri errori
+        return {
+            "errori": [],
+            "conteggio_errori": 0,
+            "punteggio": 100,
+            "suggerimenti": [f"Errore durante la verifica ortografica: {str(e)}"],
+            "servizio_disponibile": False
+        }
 
 class GrammarChecker:
     """
@@ -403,7 +422,7 @@ class PromptPerfezionatore:
                 "leggibilita": self._calcola_leggibilita(prompt, doc)
             }
             
-            # Analisi grammaticale avanzata con LanguageTool
+            # Analisi grammaticale con strumenti locali
             analisi_grammaticale = self.grammar_checker.verifica_testo(prompt)
             
             # Se il servizio è disponibile, incorpora i risultati
