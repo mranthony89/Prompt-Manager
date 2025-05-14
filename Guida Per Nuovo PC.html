@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guida - Prompt Perfezionatore</title>
+    <style>
+        :root {
+            --primary-color: #4a6da7;
+            --secondary-color: #8badee;
+            --accent-color: #ff7846;
+            --background-color: #f8fafc;
+            --text-color: #2d3748;
+            --code-bg: #f1f5f9;
+            --border-color: #e2e8f0;
+            --success-color: #48bb78;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--primary-color);
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        ul, ol {
+            margin: 1rem 0 1rem 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--primary-color);
+            transition: color 0.3s, border-bottom 0.3s;
+        }
+
+        a:hover {
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--accent-color);
+        }
+
+        .tip {
+            background-color: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background-color: #fffaf0;
+            border-left: 4px solid #ed8936;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #f0fff4;
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .step {
+            display: flex;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .tabs {
+            display: flex;
+            margin: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 0.5rem;
+            background-color: var(--code-bg);
+        }
+
+        .tab.active {
+            border-color: var(--border-color);
+            border-bottom-color: white;
+            background-color: white;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            background-color: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-content .button {
+                margin-top: 1rem;
+            }
+        }
+
+        .button {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #e05d2f;
+            color: white;
+            border-bottom: none;
+        }
+
+        #toc {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        #toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        #toc li {
+            margin-bottom: 0.75rem;
+        }
+        
+        #toc a {
+            border-bottom: none;
+        }
+        
+        #toc a:hover {
+            border-bottom: 1px solid var(--accent-color);
+        }
+        
+        .toc-h2 {
+            font-weight: bold;
+        }
+        
+        .toc-h3 {
+            margin-left: 1.5rem;
+            font-size: 0.95rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-magic"></i>
+                    <div>
+                        <h1>Prompt Perfezionatore</h1>
+                        <p>Guida all'installazione e condivisione</p>
+                    </div>
+                </div>
+                <a href="#inizia" class="button">Inizia subito <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card" id="introduzione">
+            <h2><i class="fas fa-info-circle"></i> Introduzione</h2>
+            <p>Questa guida ti mostrerà come installare e condividere <strong>Prompt Perfezionatore</strong>, un potente strumento per migliorare i prompt per modelli di linguaggio come ChatGPT, Claude e DeepSeek.</p>
+            <p>Che tu voglia installarlo sul tuo PC, condividerlo con amici o metterlo online per tester remoti, troverai istruzioni dettagliate e semplici da seguire.</p>
+            
+            <div class="tip">
+                <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Avere tester umani è fondamentale per migliorare l'applicazione e ricevere feedback prezioso.
+            </div>
+        </div>
+
+        <div id="toc" class="card">
+            <h2><i class="fas fa-list"></i> Indice</h2>
+            <ul>
+                <li class="toc-h2"><a href="#prerequisiti">Prerequisiti</a></li>
+                <li class="toc-h2"><a href="#installazione-locale">Installazione locale</a></li>
+                <li class="toc-h3"><a href="#step1">1. Installa Python</a></li>
+                <li class="toc-h3"><a href="#step2">2. Scarica il progetto</a></li>
+                <li class="toc-h3"><a href="#step3">3. Crea l'ambiente virtuale</a></li>
+                <li class="toc-h3"><a href="#step4">4. Installa le dipendenze</a></li>
+                <li class="toc-h3"><a href="#step5">5. Installa il modello italiano per spaCy</a></li>
+                <li class="toc-h3"><a href="#step6">6. Configura la chiave API DeepSeek</a></li>
+                <li class="toc-h3"><a href="#step7">7. Avvia l'applicazione</a></li>
+                <li class="toc-h2"><a href="#condivisione-locale">Condivisione in rete locale</a></li>
+                <li class="toc-h2"><a href="#pubblicazione-online">Pubblicazione online</a></li>
+                <li class="toc-h3"><a href="#opzione1">Opzione 1: Condivisione temporanea con Gradio</a></li>
+                <li class="toc-h3"><a href="#opzione2">Opzione 2: Deploy su Hugging Face Spaces</a></li>
+                <li class="toc-h3"><a href="#opzione3">Opzione 3: Deploy su un server</a></li>
+                <li class="toc-h2"><a href="#suggerimenti-tester">Suggerimenti per i tester</a></li>
+                <li class="toc-h2"><a href="#risoluzione-problemi">Risoluzione dei problemi</a></li>
+            </ul>
+        </div>
+
+        <div class="card" id="prerequisiti">
+            <h2><i class="fas fa-check-square"></i> Prerequisiti</h2>
+            <ul>
+                <li>Computer con Windows, macOS o Linux</li>
+                <li>Conoscenze di base sull'uso del terminale/prompt dei comandi</li>
+                <li>Connessione internet</li>
+            </ul>
+        </div>
+
+        <div class="card" id="installazione-locale">
+            <h2><i class="fas fa-download"></i> Installazione locale</h2>
+            <p>Segui questi passaggi per installare Prompt Perfezionatore sul tuo PC o quello di un amico.</p>
+
+            <div class="step" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Installa Python</h3>
+                    <ol>
+                        <li>Scarica Python 3.7 o superiore da <a href="https://www.python.org/downloads/" target="_blank">python.org</a></li>
+                        <li>Durante l'installazione, <strong>assicurati di selezionare "Aggiungi Python al PATH"</strong></li>
+                        <li>Verifica l'installazione aprendo un terminale/prompt e digitando:
+                            <pre><code>python --version</code></pre>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Scarica il progetto</h3>
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="openTab(event, 'git')">Con Git</div>
+                        <div class="tab" onclick="openTab(event, 'manual')">Senza Git</div>
+                    </div>
+                    
+                    <div id="git" class="tab-content active">
+                        <pre><code>git clone https://github.com/tuonome/prompt-perfezionatore.git
+cd prompt-perfezionatore</code></pre>
+                    </div>
+                    
+                    <div id="manual" class="tab-content">
+                        <ol>
+                            <li>Crea una cartella chiamata <code>prompt-perfezionatore</code></li>
+                            <li>Salva al suo interno tutti i file del progetto:
+                                <ul>
+                                    <li><code>prompt_perfezionatore.py</code> (il file principale)</li>
+                                    <li><code>requirements.txt</code></li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Crea l'ambiente virtuale</h3>
+                    <p>Apri un terminale/prompt dei comandi nella cartella del progetto:</p>
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="openTab(event, 'win')">Windows</div>
+                        <div class="tab" onclick="openTab(event, 'unix')">macOS/Linux</div>
+                    </div>
+                    
+                    <div id="win" class="tab-content active">
+                        <pre><code>python -m venv venv
+venv\Scripts\activate</code></pre>
+                    </div>
+                    
+                    <div id="unix" class="tab-content">
+                        <pre><code>python3 -m venv venv
+source venv/bin/activate</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Installa le dipendenze</h3>
+                    <pre><code>pip install -r requirements.txt</code></pre>
+                    <div class="tip">
+                        <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Questo passaggio potrebbe richiedere diversi minuti, specialmente su connessioni lente o PC meno potenti.
+                    </div>
+                </div>
+            </div>
+
+            <div class="step" id="step5">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>Installa il modello italiano per spaCy</h3>
+                    <pre><code>python -m spacy download it_core_news_sm</code></pre>
+                </div>
+            </div>
+
+            <div class="step" id="step6">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h3>Configura la chiave API DeepSeek</h3>
+                    <ol>
+                        <li>Ottieni una chiave API da <a href="https://platform.deepseek.com/" target="_blank">DeepSeek</a></li>
+                        <li>Crea un file chiamato <code>.env</code> nella cartella principale del progetto</li>
+                        <li>Aggiungi questa riga al file:
+                            <pre><code>DEEPSEEK_API_KEY="la-tua-chiave-api-qui"</code></pre>
+                            (sostituisci "la-tua-chiave-api-qui" con la tua chiave reale)
+                        </li>
+                    </ol>
+                    <div class="warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Attenzione:</strong> Non condividere o esporre pubblicamente la tua chiave API! Trattala come una password.
+                    </div>
+                </div>
+            </div>
+
+            <div class="step" id="step7">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <h3>Avvia l'applicazione</h3>
+                    <pre><code>python prompt_perfezionatore.py</code></pre>
+                    <p>L'interfaccia web sarà accessibile all'indirizzo: <a href="http://127.0.0.1:7860" target="_blank">http://127.0.0.1:7860</a></p>
+                    <div class="success">
+                        <i class="fas fa-check-circle"></i> <strong>Successo!</strong> Se vedi l'interfaccia di Prompt Perfezionatore, l'installazione è riuscita.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="condivisione-locale">
+            <h2><i class="fas fa-network-wired"></i> Condivisione in rete locale</h2>
+            <p>Per condividere l'applicazione con amici sulla stessa rete locale (come il tuo Wi-Fi di casa):</p>
+
+            <ol>
+                <li>Modifica la funzione <code>main()</code> nel file <code>prompt_perfezionatore.py</code>:
+                    <pre><code>def main():
+    # ... codice esistente ...
+    
+    # Modifica questa riga:
+    interfaccia.launch(share=False, server_name="0.0.0.0")</code></pre>
+                </li>
+                <li>Avvia l'applicazione:
+                    <pre><code>python prompt_perfezionatore.py</code></pre>
+                </li>
+                <li>Comunica al tuo amico l'indirizzo IP del tuo computer e la porta (solitamente 7860):
+                    <p>Es. <code>http://192.168.1.5:7860</code></p>
+                </li>
+                <li>Il tuo amico potrà accedere all'applicazione dal suo browser usando questo indirizzo</li>
+            </ol>
+
+            <div class="tip">
+                <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Per scoprire l'indirizzo IP del tuo computer, usa <code>ipconfig</code> (Windows) o <code>ifconfig</code> (macOS/Linux) nel terminale.
+            </div>
+        </div>
+
+        <div class="card" id="pubblicazione-online">
+            <h2><i class="fas fa-cloud-upload-alt"></i> Pubblicazione online (per tester remoti)</h2>
+            <p>Ci sono diverse opzioni per rendere disponibile l'app online.</p>
+
+            <div class="step" id="opzione1">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Condivisione temporanea con Gradio</h3>
+                    <p>Questo metodo è il più semplice ma fornisce un link temporaneo che scade dopo alcune ore:</p>
+                    <ol>
+                        <li>Modifica la funzione <code>main()</code>:
+                            <pre><code>def main():
+    # ... codice esistente ...
+    
+    # Modifica questa riga:
+    interfaccia.launch(share=True)  # Imposta share=True</code></pre>
+                        </li>
+                        <li>Avvia l'applicazione:
+                            <pre><code>python prompt_perfezionatore.py</code></pre>
+                        </li>
+                        <li>Verrà generato un link pubblico temporaneo del tipo <code>https://xxx.gradio.app</code> che puoi condividere con i tuoi tester</li>
+                    </ol>
+                    <div class="warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Attenzione:</strong> Il link Gradio scade dopo alcune ore e ha limiti di traffico.
+                    </div>
+                </div>
+            </div>
+
+            <div class="step" id="opzione2">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Deploy su Hugging Face Spaces (consigliato per tester)</h3>
+                    <ol>
+                        <li>Crea un account su <a href="https://huggingface.co/" target="_blank">Hugging Face</a></li>
+                        <li>Vai su <a href="https://huggingface.co/spaces" target="_blank">Hugging Face Spaces</a></li>
+                        <li>Clicca su "Create Space"</li>
+                        <li>Seleziona "Gradio" come SDK</li>
+                        <li>Carica i file del progetto (puoi farlo tramite interfaccia web o Git)</li>
+                        <li>Assicurati di configurare la variabile d'ambiente <code>DEEPSEEK_API_KEY</code> nelle impostazioni dello Space</li>
+                    </ol>
+                    <div class="tip">
+                        <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Questa opzione è stabile, professionale e ideale per condividere con più tester.
+                    </div>
+                </div>
+            </div>
+
+            <div class="step" id="opzione3">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Deploy su un server (per uso prolungato)</h3>
+                    <p>Per un servizio più stabile e duraturo, puoi utilizzare un servizio VPS come:</p>
+                    <ul>
+                        <li><a href="https://www.digitalocean.com/" target="_blank">DigitalOcean</a> (a partire da $5/mese)</li>
+                        <li><a href="https://www.linode.com/" target="_blank">Linode</a> (a partire da $5/mese)</li>
+                        <li><a href="https://render.com/" target="_blank">Render</a> (ha un piano gratuito limitato)</li>
+                    </ul>
+                    <p>Su questi servizi, segui i passaggi di installazione locale, con l'aggiunta:</p>
+                    <pre><code>def main():
+    # ... codice esistente ...
+    
+    # Per rendere l'app accessibile pubblicamente:
+    interfaccia.launch(server_name="0.0.0.0", server_port=8080)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="suggerimenti-tester">
+            <h2><i class="fas fa-users"></i> Suggerimenti per i tester</h2>
+            <p>Fornisci queste informazioni ai tuoi tester:</p>
+
+            <ol>
+                <li><strong>Come accedere all'applicazione</strong> (URL)</li>
+                <li><strong>Esempi di prompt da provare</strong>, come:
+                    <ul>
+                        <li>"Parlami dell'energia solare"</li>
+                        <li>"Scrivi una email di vendita"</li>
+                        <li>"Crea una descrizione di un prodotto per il mio e-commerce"</li>
+                    </ul>
+                </li>
+                <li><strong>Specifiche aree su cui desideri feedback</strong>, ad esempio:
+                    <ul>
+                        <li>Facilità d'uso dell'interfaccia</li>
+                        <li>Qualità dei suggerimenti generati</li>
+                        <li>Utilità dell'analisi grammaticale</li>
+                        <li>Velocità di risposta</li>
+                        <li>Chiarezza della spiegazione delle modifiche</li>
+                    </ul>
+                </li>
+                <li><strong>Come segnalare problemi o fornire feedback</strong> (email, modulo, etc.)</li>
+            </ol>
+
+            <div class="tip">
+                <i class="fas fa-lightbulb"></i> <strong>Consiglio:</strong> Crea un modulo Google per raccogliere i feedback in modo strutturato.
+            </div>
+        </div>
+
+        <div class="card" id="risoluzione-problemi">
+            <h2><i class="fas fa-tools"></i> Risoluzione dei problemi comuni</h2>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Errore "Modulo non trovato"</h3>
+                    <p>Assicurati di aver installato tutte le dipendenze:</p>
+                    <pre><code>pip install -r requirements.txt</code></pre>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Errore spaCy</h3>
+                    <p>Se appare un errore relativo a spaCy, esegui:</p>
+                    <pre><code>python -m spacy download it_core_news_sm</code></pre>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Errore API DeepSeek</h3>
+                    <p>Verifica che la chiave API sia corretta nel file <code>.env</code></p>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Errore porta in uso</h3>
+                    <p>Se la porta 7860 è già in uso, modifica la porta nel codice con:</p>
+                    <pre><code>interfaccia.launch(share=False, server_port=8000)  # Cambia 8000 con una porta disponibile</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Prompt Perfezionatore - Guida all'installazione e condivisione</p>
+            <p><small>Documentazione generata da Claude AI</small></p>
+        </div>
+    </footer>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                if (tabcontent[i].parentElement === evt.currentTarget.parentElement.nextElementSibling) {
+                    tabcontent[i].className = tabcontent[i].className.replace(" active", "");
+                }
+            }
+            
+            tablinks = evt.currentTarget.parentElement.getElementsByClassName("tab");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(tabName).className += " active";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+</body>
+</html>
